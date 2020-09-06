@@ -1,0 +1,73 @@
+<!DOCTYPE html> 
+<html lang="en"> 
+<head>
+ <meta charset="UTF-8"> 
+<title>Проаналізуй свій текс</title>
+ </head>
+ <body> 
+    <div>
+        <h1>Проаналізуй свій текс</h1>
+    </div>
+    <div>
+    <textarea id="textarea" placeholder="Введiть текст..."></textarea>
+    <p id="text"></p>
+    </div>
+    <div>
+        <button id="but">Проаналізувати</button>
+    </div>
+    
+<script>
+    document.getElementById('but').addEventListener("click", function() {  
+    text = document.getElementById('textarea').value; 
+    if(text=="")
+        alert("Ви не ввели жоного слова!");
+    else{
+        sessionStorage.setItem('textareainfo', text); //Свойство sessionStorage позволяет получить доступ к объекту Storage текущей сессии
+        document.location.href = ("exam.html");
+    }
+});
+</script>
+<style>
+ #but{
+        width: 180px;
+        height: 40px;
+        margin-left: 1280px;
+        font-size: 16px;
+        border: 1.5px solid red;
+        color: rgb(255, 52, 52);
+        background-color: rgb(255, 253, 115);
+        cursor: pointer;
+        border-radius: 5px;
+        text-align: center;
+        outline: none;
+        font-weight: bold;
+    }
+    #but:hover{
+        color: red;
+        background-color: rgb(252, 249, 65);
+    }
+    #but:active{
+        color: rgb(255, 52, 52);
+        background-color: rgb(255, 253, 115);
+    }
+    #textarea {
+        width: 99.5%;
+        height: 550px;
+        margin-top: 5px;
+        font-size: 17px;
+        border: 3px solid orange;
+        outline: none;
+        resize: none;
+        border-radius: 5px;
+        background-color: rgb(254, 255, 239);
+        font-size: 18px;
+    }
+    h1{
+        color:orangered;
+        text-align: center;
+    }
+    body{
+        background-color: rgb(252, 248, 203);
+    }
+</style>
+</body>

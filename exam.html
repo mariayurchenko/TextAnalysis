@@ -1,0 +1,203 @@
+<!DOCTYPE html> 
+<html lang="en"> 
+<head>
+<meta charset="UTF-8"> 
+<title>Проаналізуй свій текс</title>
+</head>
+ <body> 
+    <div id="exam">
+        <div class="table" id="mytable">
+            <table id="table">
+            </table>
+        </div>
+        <div id="mytext">
+            <textarea id ="scan"></textarea>
+            <input type = "button" id="but" value = "Шукати" onclick="scanFun()">
+            <p id=text></p>
+        </div>
+    </div>  
+<script>
+document.getElementById('text').innerHTML = sessionStorage.getItem('textareainfo'); // вставляем наш текст 
+var source = document.getElementById('text').innerHTML; // наш текст
+var text  = deletePunctuationMarks(source); // убираем все знаки препинания
+var array = text.toLowerCase().split(' '); // делаем масив из всех слов в тексте
+help(document.getElementById("scan"), array); // формируем подсказку при введении слов в нашем поиске
+var data = tableData(array); // создаем масив объектов { слово: количество слов, ...}
+var key = "";
+delete data[key]; // удаляем пробелы
+drawTable(); // вызываем функцию, которая рисует нашу таблицу
+function drawTable(){
+	var header = '<table id="table">';
+	var	footer = '</table>';
+	var	table = '';	
+	for (var word in data) {
+		table+= '<tr><td>' + word + '</td><td>' + data[word] + '</td></tr>';
+	}
+	document.getElementById("mytable").innerHTML = header + table + footer;
+}
+
+function tableData(array){
+	var result = array.reduce(function(acc, el) { // acc - объект, el - слово(ключ), acc[el] - количество повторений(значение)
+  //Метод reduce() применяет функцию reducer к каждому элементу массива (слева-направо), возвращая одно результирующее значение.
+	  acc[el] = (acc[el] || 0) + 1;
+	  return acc;
+	}, {});
+	return result;
+}
+
+function deletePunctuationMarks(text)
+{
+	return text.replace(/[\n\r]/g, ' ').replace(/\s{2,}/g, ' ').replace(/[^A-Za-zА-Яа-яЁё ]/g, "")
+}
+
+function help(inp, arr) {
+  arr = arr.filter(function(item, pos) { // создаёт новый массив, в который войдут только те элементы arr, для которых function(item, pos) возвратит true
+    return arr.indexOf(item) == pos; // true, если слово первое, в противном случаие у повторяющего слова будет позиция(индекс) больше и результат будет false
+  });
+  inp.addEventListener("input", function(e) { // регистрирует определенный обработчик события, вызванного на EventTarget
+  var a, b, val = this.value;
+  closeAllLists();
+  if (!val) { 
+    return false;
+  }
+  a = document.createElement("DIV");
+  a.setAttribute("id", this.id + "help-list"); // id = "scanhelp-list"
+  a.setAttribute("class", "helplist"); // class = "helplist"
+  this.parentNode.append(a); //добавляет набор объектов Node или DOMString в конец (после последнего потомка) ParentNode
+  for (i = 0; i < arr.length; i++) {  
+    if (arr[i].substr(0, val.length).toUpperCase() == val.toUpperCase()) {   // substr() возвращает указанное количество символов из строки, начиная с указанной позиции 
+      b = document.createElement("div"); 
+      b.setAttribute("class", "help");      
+      b.innerHTML = "<strong>" + arr[i].substr(0, val.length) + "</strong>"; // выделяет жирным начало слов которое мы пишем
+      b.innerHTML += arr[i].substr(val.length); // остачу слова пишем без выделения     
+      b.innerHTML += "<input type='hidden' value='" + arr[i] + "'>"; 
+      b.addEventListener("click", function(e) {             
+      inp.value = this.getElementsByTagName("input")[0].value;  // при клике на нужное нам слово оно записуется в поле ввода
+      closeAllLists(); //после этого закрываем наши подсказки
+      });
+      a.appendChild(b); //добавляет узел в качестве последнего дочернего узла в указанный родительский элемент
+    }
+  }
+});
+function closeAllLists(elmnt) { // закрываем наш лист с подсказками
+  var x = document.getElementsByClassName("helplist");
+  for (var i = 0; i < x.length; i++) {
+    if (elmnt != x[i] && elmnt != inp) {
+      x[i].parentNode.removeChild(x[i]);
+    }
+  }
+}
+document.addEventListener("click", function (e) { // закрываем наши подсказки при клике
+  closeAllLists(e.target);
+});
+}
+function scanFun() {
+document.getElementById("text").textContent = source; // вставляем наш текст (нужен чтобы убрать предыдущее выделение)
+var scan = document.getElementById("scan").value; // наше слово, которое ищем
+var smallText = source.toLowerCase(); // переводит всё  в нижний регистр
+var test=0;
+var j=0;
+var k=0;
+for (var i=0; i<smallText.length;i++){
+  if(smallText[i]==scan[j]){ // если первые буквы совпадают, то идем дальше
+    test++;
+    j++;
+  }
+  else{ // начинаем заново сравнивать буквы
+    test=0;
+    j=0;
+  }
+  if(test==scan.length){ // если количество найденых букв подряд совпадают с длиной слова
+    k++; // считаем количество найденных слов
+    test=0;
+    j=0;
+  }
+}
+for(var i=0;i<k;i++){
+  var rng = document.createRange();
+  var start =smallText.indexOf(scan); // индекс начала слова (поиск идет по тексту с нижним регистром)
+  var end = smallText.indexOf(scan)+scan.length; // индекс конца слова (поиск идет по тексту с нижним регистром)
+  var child = document.getElementById("text").childNodes; // масив дочирных елементов
+  var content=child[i+i].nodeValue; // первый будет 0, потом 2, 4, 6, 8... (нужно чтобы работать со слудующей частью текста после текста и вставленого после span)
+  rng.setStart(child[i+i], start); // первый символ слова, которое хотим выделеть
+  rng.setEnd(child[i+i], end); // его конец (прибавляем к нужному индексу длину слова)
+  var highlightDiv = document.createElement('span'); // создаем елемент span
+  highlightDiv.style.backgroundColor = 'yellow'; // делаем его содержимое желтым фоном
+  rng.surroundContents(highlightDiv); // перемещаем слово в созданый нами елемент
+  smallText = smallText.substr(end); // удаляем текст до заканчивания найденого слова
+}
+}
+</script>
+
+<style>
+  #exam {
+    display: flex;
+    flex-direction: row;
+  }
+  #mytext{
+    margin-left: 15px;
+  }
+  #scan {
+    width: 170px;
+    height: 20px;
+    font-size: 17px;
+    border: 2px solid rgb(255, 153, 0);
+    background-color: rgb(254, 255, 239);
+    outline: none;
+    resize: none;
+    border-radius: 5px;
+  }
+  p{
+    font-size: 18px;
+    margin-right: 30px;
+    position: relative;
+    bottom: 15px;
+  }
+  #but{
+    width: 80px;
+    height: 25px;
+    position: relative;
+    bottom: 8px;
+    font-size: 16px;
+    border: 1.5px solid red;
+    color: rgb(255, 52, 52);
+    background-color: rgb(255, 253, 115);
+    cursor: pointer;
+    border-radius: 5px;
+    text-align: center;
+    outline: none;
+  }
+  #but:hover{
+    color: red;
+    background-color: rgb(252, 249, 65);
+  }
+  #but:active{
+    color: rgb(255, 52, 52);
+    background-color: rgb(255, 253, 115);
+  }
+  td{
+    border: 1px solid black;
+  }
+  table {
+    border: 1px solid black;
+    width: 220px;
+  }
+  .col1 { width: 160px;}
+  .col2 { width: 60px;}
+  body{
+    background-color: rgb(252, 248, 203);
+  }
+  .helplist {
+    width: 170px;
+    font-size:17px;
+	  position: absolute;
+    left: 245px;
+    top: 35px;
+    border: 1.5px solid rgb(255, 153, 0);
+    }
+    .help{
+	  cursor: pointer;
+    background-color: rgb(254, 255, 239);
+    }
+</style>
+</body>
